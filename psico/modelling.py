@@ -544,12 +544,57 @@ ARGUMENTS
     if not quiet:
         print(' peptide_rebuild_modeller: done')
 
+
+def update_align(mobile: str,
+                 target: str,
+                 state: int = 1,
+                 quiet: int = 1,
+                 *,
+                 _self=cmd):
+    """
+DESCRIPTION
+
+    Update (and protect) coordinates based on sequence alignment.
+    """
+    aln = _self.get_unused_name("aln_hom")
+    _self.align(mobile, target, object=aln, cycles=0, max_gap=-1)
+    try:
+        _self.update(f"({mobile}) & {aln}",
+                     f"({target}) & {aln}",
+                     state,
+                     state,
+                     matchmaker=0)
+        _self.protect(f"({mobile}) & {aln}")
+    finally:
+        _self.delete(aln)
+
+
+def sculpt_homolog(mobile: str,
+                   target: str,
+                   state: int = 1,
+                   quiet: int = 1,
+                   cycles: int = 1000,
+                   *,
+                   _self=cmd):
+    """
+DESCRIPTION
+
+    Sculpt mobile towards target, based on sequence alignment.
+    """
+    (mobile_object, ) = _self.get_object_list(mobile)
+    _self.sculpt_activate(mobile_object, state)
+    update_align(mobile, target, state, quiet, _self=_self)
+    _self.sculpt_iterate(mobile, state, cycles)
+
+
 cmd.extend('mutate', mutate)
 cmd.extend('mutate_all', mutate_all)
 cmd.extend('sculpt_relax', sculpt_relax)
 cmd.extend('add_missing_atoms', add_missing_atoms)
 cmd.extend('peptide_rebuild', peptide_rebuild)
 cmd.extend('peptide_rebuild_modeller', peptide_rebuild_modeller)
+cmd.extend('update_align', update_align)
+cmd.extend('sculpt_homolog', sculpt_homolog)
 
 cmd.auto_arg[0].update([
     ('mutate', cmd.auto_arg[0]['align']),
