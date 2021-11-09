@@ -436,6 +436,16 @@ def iterate_state_to_list(state: int,
     return outlist
 
 
+def object_chain_iter(selection: str, *, _self=cmd):
+    """
+    API only. Get (object, chain) tuples for all objects and all chains in
+    the selection.
+    """
+    for model in _self.get_object_list(selection):
+        for chain in _self.get_chains(f"({selection}) & model {model}"):
+            yield (model, chain)
+
+
 def csp(sele1, sele2='', quiet=1, var="formal_charge", _self=cmd):
     """
 DESCRIPTION
